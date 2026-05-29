@@ -1,0 +1,38 @@
+name: Hourly YouTube View Tracker
+
+on:
+  schedule:
+    - cron: '0 * * * *' # Runs at minute 0 of every hour
+  workflow_dispatch: # This allows you to trigger it manually to test
+
+jobs:
+  track_views:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write # Needed so the bot can save the CSV back to your repo
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+
+      - name: Install dependencies
+        run: pip install requests
+
+      - name: Run Python script
+        env:
+          YOUTUBE_API_KEY: ${{ secrets.YOUTUBE_API_KEY }}
+        run: python track_views.py
+
+      - name: Commit and push changes
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add youtube_views_history.csv
+          # This line ensures it only commits if a new row was actually added
+          git diff --quiet && git diff --staged --quiet || git commit -m "Update view count"
+          git push
