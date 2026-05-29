@@ -4,11 +4,12 @@ on:
   schedule:
     - cron: '20 * * * *' # runs at 20 minutes past every hour
   workflow_dispatch: # This allows you to trigger it manually to test
-  push:              # ← add this
+  push:
     branches:
       - main
     paths-ignore:
-      - '**.csv'  # ← ignore pushes that only change CSV files
+      - '**.csv'  # ignore pushes that only change CSV files
+
 # This forces GitHub to use Node 24 and silences the deprecation warning
 env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
@@ -40,6 +41,6 @@ jobs:
         run: |
           git config --global user.name "github-actions[bot]"
           git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add *.csv  # <-- Catches ALL CSV files created
+          git add *.csv
           git diff --quiet && git diff --staged --quiet || git commit -m "Update view counts"
           git push
