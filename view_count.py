@@ -5,7 +5,7 @@ import requests
 
 # --- CONFIGURATION ---
 # We now pull the API key from a secure environment variable
-API_KEY = os.environ.get("AIzaSyBcno3v4pl5S3FP0KtBn6s8hKGkp5NVITc") 
+API_KEY = os.environ.get("YOUTUBE_API_KEY") 
 VIDEO_ID = "T24rF_x0TmQ"  # Replace with your 11-character video ID
 CSV_FILE = "youtube_views_history.csv"
 
