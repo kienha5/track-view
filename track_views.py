@@ -13,9 +13,7 @@ VIDEO_IDS = [
     #"YOUR_VIDEO_ID_3"
 ]
 
-
 def get_video_data(video_id, api_key):
-    # We add 'snippet' to the part parameter to retrieve the video title
     url = f"https://www.googleapis.com/youtube/v3/videos?part=snippet,statistics&id={video_id}&key={api_key}"
     try:
         response = requests.get(url)
@@ -35,38 +33,61 @@ def get_video_data(video_id, api_key):
         return None, None
 
 
+def get_last_view_count(csv_file):
+    """Reads the last row of the CSV to find the previous view count."""
+    if not os.path.isfile(csv_file):
+        return None
+    try:
+        with open(csv_file, mode="r", encoding="utf-8") as file:
+            # Read the CSV and convert it into a list of rows
+            reader = list(csv.reader(file))
+            # If there is data beyond the header row
+            if len(reader) > 1: 
+                # The views are located in the 3rd column (index 2)
+                return int(reader[-1][2])
+    except Exception as e:
+        print(f"Error reading {csv_file}: {e}")
+    return None
+
+
 def log_views_to_csv():
     if not API_KEY:
         print("Error: YOUTUBE_API_KEY environment variable is missing.")
         return
 
-    # Set up Vietnam local time (ICT / UTC+7)
     ict_timezone = timezone(timedelta(hours=7))
     current_time = datetime.now(ict_timezone).strftime("%Y-%m-%d %H:%M:%S")
 
-    # Loop through every video ID provided in the list
     for video_id in VIDEO_IDS:
-        # Skip placeholder values
         if "YOUR_VIDEO_ID" in video_id:
             continue
 
         title, views = get_video_data(video_id, API_KEY)
 
         if views is not None and title is not None:
-            # Dynamically create a unique CSV filename for each video ID
             csv_file = f"youtube_views_{video_id}.csv"
             file_exists = os.path.isfile(csv_file)
 
+            # --- NEW LOGIC: Calculate View Gain ---
+            last_views = get_last_view_count(csv_file)
+            
+            if last_views is not None:
+                view_gain = views - last_views
+            else:
+                view_gain = 0 # First ever entry
+
+            # --- WRITE TO CSV ---
             with open(csv_file, mode="a", newline="", encoding="utf-8") as file:
                 writer = csv.writer(file)
                 
-                # Write header including the Video Title column if file is new
+                # Updated Header to include View Gain
                 if not file_exists:
-                    writer.writerow(["Timestamp", "Video Title", "Views"])
+                    writer.writerow(["Timestamp", "Video Title", "Views", "View Gain"])
                 
-                writer.writerow([current_time, title, views])
+                # Write the new row
+                writer.writerow([current_time, title, views, view_gain])
                 
-            print(f"Logged '{title}' ({video_id}) at {current_time}: {views} views")
+            print(f"Logged '{title}' at {current_time}: {views} views (+{view_gain})")
 
 
 if __name__ == "__main__":
