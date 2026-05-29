@@ -7,6 +7,8 @@ on:
   push:              # ← add this
     branches:
       - main
+    paths-ignore:
+      - '**.csv'  # ← ignore pushes that only change CSV files
 # This forces GitHub to use Node 24 and silences the deprecation warning
 env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
