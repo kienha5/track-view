@@ -4,7 +4,9 @@ on:
   schedule:
     - cron: '30 * * * *' # runs at 30 minutes past every hour
   workflow_dispatch: # This allows you to trigger it manually to test
-
+  push:              # ← add this
+    branches:
+      - main
 # This forces GitHub to use Node 24 and silences the deprecation warning
 env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
