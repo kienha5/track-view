@@ -77,18 +77,24 @@ def log_views_to_csv():
                 view_gain = 0 # First ever entry
 
             # --- WRITE TO CSV ---
-            with open(csv_file, mode="a", newline="", encoding="utf-8") as file:
-                writer = csv.writer(file)
-                
-                # Updated Header to include View Gain
-                if not file_exists:
-                    writer.writerow(["Timestamp", "Video Title", "Views", "View Gain"])
-                
-                # Write the new row
-                writer.writerow([current_time, title, views, view_gain])
-                
-            print(f"Logged '{title}' at {current_time}: {views} views (+{view_gain})")
-
+            # Check if this timestamp already exists in the CSV
+            already_logged = False
+            if os.path.isfile(csv_file):
+                with open(csv_file, mode="r", encoding="utf-8") as f:
+                    for row in csv.reader(f):
+                        if row and row[0] == current_time:
+                            already_logged = True
+                            break
+            
+            if not already_logged:
+                with open(csv_file, mode="a", newline="", encoding="utf-8") as file:
+                    writer = csv.writer(file)
+                    if not file_exists:
+                        writer.writerow(["Timestamp", "Video Title", "Views", "View Gain"])
+                    writer.writerow([current_time, title, views, view_gain])
+                    print(f"Logged '{title}' at {current_time}: {views} views (+{view_gain})")
+            else:
+                print(f"Already logged at {current_time}, skipping.")
 
 if __name__ == "__main__":
     log_views_to_csv()
