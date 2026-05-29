@@ -2,7 +2,7 @@ name: Hourly YouTube View Tracker
 
 on:
   schedule:
-    - cron: '0 * * * *' # Runs at minute 0 of every hour
+  - cron: '30 * * * *' # runs at 30 minutes past every hour
   workflow_dispatch: # This allows you to trigger it manually to test
 
 # This forces GitHub to use Node 24 and silences the deprecation warning
