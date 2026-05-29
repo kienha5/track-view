@@ -5,6 +5,10 @@ on:
     - cron: '0 * * * *' # Runs at minute 0 of every hour
   workflow_dispatch: # This allows you to trigger it manually to test
 
+# This forces GitHub to use Node 24 and silences the deprecation warning
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
 jobs:
   track_views:
     runs-on: ubuntu-latest
@@ -22,7 +26,7 @@ jobs:
 
       - name: Install dependencies
         run: pip install requests
-
+        
       - name: Run Python script
         env:
           YOUTUBE_API_KEY: ${{ secrets.YOUTUBE_API_KEY }}
@@ -32,7 +36,6 @@ jobs:
         run: |
           git config --global user.name "github-actions[bot]"
           git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add youtube_views_history.csv
-          # This line ensures it only commits if a new row was actually added
-          git diff --quiet && git diff --staged --quiet || git commit -m "Update view count"
+          git add *.csv  # <-- Catches ALL CSV files created
+          git diff --quiet && git diff --staged --quiet || git commit -m "Update view counts"
           git push
