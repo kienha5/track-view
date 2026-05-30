@@ -3,14 +3,7 @@ name: Hourly YouTube View Tracker
 on:
   repository_dispatch:
     types: [trigger-view-tracker]
-  workflow_dispatch:
-  push:
-    branches:
-      - main
-    paths-ignore:
-      - '**.csv'
-      - '**.png' # Added this so chart updates don't trigger new runs
-      - '**.py'
+  workflow_dispatch: # Allows manual testing
 
 # This forces GitHub to use Node 24 and silences the deprecation warning
 env:
