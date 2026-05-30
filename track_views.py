@@ -1,7 +1,10 @@
 import csv
 import os
+import re
 from datetime import datetime, timezone, timedelta
 import requests
+import matplotlib.pyplot as plt
+import matplotlib.dates as mdates
 
 # --- CONFIGURATION ---
 API_KEY = os.environ.get("YOUTUBE_API_KEY")
@@ -12,6 +15,10 @@ VIDEO_IDS = [
     #"YOUR_VIDEO_ID_2",
     #"YOUR_VIDEO_ID_3"
 ]
+
+def sanitize_filename(name):
+    """Removes invalid characters to safely create folder names."""
+    return re.sub(r'[\\/*?:"<>|]', "", name).strip()
 
 def get_video_data(video_id, api_key):
     url = f"https://www.googleapis.com/youtube/v3/videos?part=snippet,statistics&id={video_id}&key={api_key}"
@@ -32,23 +39,56 @@ def get_video_data(video_id, api_key):
         print(f"Error fetching data for {video_id}: {e}")
         return None, None
 
-
 def get_last_view_count(csv_file):
     """Reads the last row of the CSV to find the previous view count."""
     if not os.path.isfile(csv_file):
         return None
     try:
         with open(csv_file, mode="r", encoding="utf-8") as file:
-            # Read the CSV and convert it into a list of rows
             reader = list(csv.reader(file))
-            # If there is data beyond the header row
             if len(reader) > 1: 
-                # The views are located in the 3rd column (index 2)
                 return int(reader[-1][2])
     except Exception as e:
         print(f"Error reading {csv_file}: {e}")
     return None
 
+def update_chart(csv_file, folder_path, video_title):
+    """Generates a line chart from the CSV data and saves it as an image."""
+    timestamps = []
+    views = []
+    
+    try:
+        with open(csv_file, mode="r", encoding="utf-8") as file:
+            reader = csv.reader(file)
+            next(reader, None)  # Skip the header row
+            for row in reader:
+                if len(row) >= 3:
+                    timestamps.append(datetime.strptime(row[0], "%Y-%m-%d %H:%M:%S"))
+                    views.append(int(row[2]))
+    except Exception as e:
+        print(f"Error reading CSV for chart: {e}")
+        return
+
+    if not timestamps:
+        return
+
+    # Plotting the data
+    plt.figure(figsize=(10, 6))
+    plt.plot(timestamps, views, marker='o', linestyle='-', color='b', markersize=4)
+    plt.title(f"View Tracking: {video_title}")
+    plt.xlabel("Time (ICT)")
+    plt.ylabel("Total Views")
+    plt.grid(True, linestyle='--', alpha=0.7)
+    
+    # Format x-axis to show dates nicely without crowding
+    plt.gca().xaxis.set_major_formatter(mdates.DateFormatter('%m-%d %H:%M'))
+    plt.gcf().autofmt_xdate() # Auto-rotate the x-axis labels
+    
+    # Save the plot inside the specific folder
+    chart_path = os.path.join(folder_path, "view_chart.png")
+    plt.savefig(chart_path, bbox_inches="tight", dpi=150)
+    plt.close()
+    print(f"Chart updated and saved to: {chart_path}")
 
 def log_views_to_csv():
     if not API_KEY:
@@ -65,19 +105,24 @@ def log_views_to_csv():
         title, views = get_video_data(video_id, API_KEY)
 
         if views is not None and title is not None:
-            csv_file = f"youtube_views_{video_id}.csv"
+            # --- FOLDER CREATION ---
+            safe_title = sanitize_filename(title)
+            folder_path = safe_title
+            
+            if not os.path.exists(folder_path):
+                os.makedirs(folder_path)
+                
+            csv_file = os.path.join(folder_path, f"youtube_views_{video_id}.csv")
             file_exists = os.path.isfile(csv_file)
 
-            # --- NEW LOGIC: Calculate View Gain ---
+            # --- CALCULATE GAIN ---
             last_views = get_last_view_count(csv_file)
-            
             if last_views is not None:
                 view_gain = views - last_views
             else:
-                view_gain = 0 # First ever entry
+                view_gain = 0 
 
             # --- WRITE TO CSV ---
-            # Check if this timestamp already exists in the CSV
             already_logged = False
             if os.path.isfile(csv_file):
                 with open(csv_file, mode="r", encoding="utf-8") as f:
@@ -94,7 +139,12 @@ def log_views_to_csv():
                     writer.writerow([current_time, title, views, view_gain])
                     print(f"Logged '{title}' at {current_time}: {views} views (+{view_gain})")
             else:
-                print(f"Already logged at {current_time}, skipping.")
+                print(f"Already logged at {current_time}, skipping CSV write.")
+
+            # --- DRAW AND SAVE CHART ---
+            # We always update the chart if a new row was added
+            if not already_logged or not os.path.exists(os.path.join(folder_path, "view_chart.png")):
+                update_chart(csv_file, folder_path, title)
 
 if __name__ == "__main__":
     log_views_to_csv()
