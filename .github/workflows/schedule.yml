@@ -1,14 +1,14 @@
 name: Hourly YouTube View Tracker
 
 on:
-  schedule:
-    - cron: '20 * * * *' # runs at 20 minutes past every hour
-  workflow_dispatch: # This allows you to trigger it manually to test
+  repository_dispatch:
+    types: [trigger-view-tracker]
+  workflow_dispatch:
   push:
     branches:
       - main
     paths-ignore:
-      - '**.csv'  # ignore pushes that only change CSV files
+      - '**.csv'
 
 # This forces GitHub to use Node 24 and silences the deprecation warning
 env:
