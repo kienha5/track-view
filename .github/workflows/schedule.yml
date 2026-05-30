@@ -10,6 +10,7 @@ on:
     paths-ignore:
       - '**.csv'
       - '**.png' # Added this so chart updates don't trigger new runs
+      - '**.py'
 
 # This forces GitHub to use Node 24 and silences the deprecation warning
 env:
