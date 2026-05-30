@@ -9,6 +9,7 @@ on:
       - main
     paths-ignore:
       - '**.csv'
+      - '**.png' # Added this so chart updates don't trigger new runs
 
 # This forces GitHub to use Node 24 and silences the deprecation warning
 env:
@@ -18,7 +19,7 @@ jobs:
   track_views:
     runs-on: ubuntu-latest
     permissions:
-      contents: write # Needed so the bot can save the CSV back to your repo
+      contents: write # Needed so the bot can save files back to your repo
 
     steps:
       - name: Checkout repository
@@ -30,7 +31,7 @@ jobs:
           python-version: '3.10'
 
       - name: Install dependencies
-        run: pip install requests
+        run: pip install requests matplotlib
         
       - name: Run Python script
         env:
@@ -41,6 +42,6 @@ jobs:
         run: |
           git config --global user.name "github-actions[bot]"
           git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add *.csv
-          git diff --quiet && git diff --staged --quiet || git commit -m "Update view counts"
+          git add .
+          git diff --quiet && git diff --staged --quiet || git commit -m "Update view counts and charts"
           git push
