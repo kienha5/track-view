@@ -12,8 +12,7 @@ API_KEY = os.environ.get("YOUTUBE_API_KEY")
 # Add as many 11-character video IDs to this list as you want!
 VIDEO_IDS = [
     "T24rF_x0TmQ",
-    "XKZIQlqVjjk",
-    "XYYq-uSeVwY"
+    "NaY0tOP29ps"
     #"YOUR_VIDEO_ID_3"
 ]
 
